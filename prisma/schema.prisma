@@ -3,10 +3,10 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
-
 
 model User {
   id            String    @id @default(cuid())
@@ -70,14 +70,14 @@ model VerificationToken {
 model StyleProfile {
   id              String   @id @default(cuid())
   userId          String   @unique
-  aestheticRefs   String   // JSON array
-  preferredColors String   // JSON array
-  avoidColors     String   // JSON array
-  fitPreferences  String   // JSON
+  aestheticRefs   String
+  preferredColors String
+  avoidColors     String
+  fitPreferences  String
   climate         String?
-  budgetTier      String?  // low | mid | high
-  trustedBrands   String   // JSON array
-  values          String   // JSON array
+  budgetTier      String?
+  trustedBrands   String
+  values          String
   notes           String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -88,7 +88,7 @@ model StyleProfile {
 model LifeMap {
   id        String   @id @default(cuid())
   userId    String   @unique
-  events    String   // JSON: [{id, name, frequency, dressCode, priority}]
+  events    String
   primaryEventId String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -100,14 +100,14 @@ model StyleSystem {
   id              String   @id @default(cuid())
   userId          String   @unique
   manifesto       String
-  palette         String   // JSON: [{name, hex}]
-  silhouettes     String   // JSON array
-  fabrics         String   // JSON array
-  alwaysRules     String   // JSON array
-  neverRules      String   // JSON array
-  signaturePieces String   // JSON array
-  vibeReferences  String   // JSON array
-  rawJson         String?  // full AI payload
+  palette         String
+  silhouettes     String
+  fabrics         String
+  alwaysRules     String
+  neverRules      String
+  signaturePieces String
+  vibeReferences  String
+  rawJson         String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -117,7 +117,7 @@ model StyleSystem {
 model WardrobeBlueprint {
   id          String   @id @default(cuid())
   userId      String   @unique
-  pieces      String   // JSON: BlueprintPiece[]
+  pieces      String
   summary     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -128,7 +128,7 @@ model WardrobeBlueprint {
 model RebuildRoadmap {
   id          String   @id @default(cuid())
   userId      String   @unique
-  items       String   // JSON: RoadmapItem[]
+  items       String
   weeklyFocus String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -140,7 +140,7 @@ model AnalyticsEvent {
   id        String   @id @default(cuid())
   userId    String?
   name      String
-  props     String?  // JSON
+  props     String?
   createdAt DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -149,7 +149,7 @@ model AnalyticsEvent {
 model Feedback {
   id        String   @id @default(cuid())
   userId    String
-  cohesive  Int      // 1-5: closet feels more cohesive
+  cohesive  Int
   comment   String?
   createdAt DateTime @default(now())
 

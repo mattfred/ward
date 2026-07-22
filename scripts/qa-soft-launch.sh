@@ -6,7 +6,7 @@ EMAIL="qa-$(date +%s)@example.com"
 PASS="password123"
 COOKIE_JAR="$(mktemp)"
 
-echo "== Cohesive soft-launch QA =="
+echo "== Ward soft-launch QA =="
 echo "Base: $BASE"
 echo "Email: $EMAIL"
 

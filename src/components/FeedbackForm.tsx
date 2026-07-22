@@ -24,7 +24,7 @@ export function FeedbackForm() {
   }
 
   if (done) {
-    return <p style={{ color: "var(--moss-deep)", fontWeight: 600 }}>Thanks — that helps shape Cohesive.</p>;
+    return <p style={{ color: "var(--moss-deep)", fontWeight: 600 }}>Thanks — that helps shape Ward.</p>;
   }
 
   return (

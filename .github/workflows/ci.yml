@@ -8,6 +8,27 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: cohesive
+          POSTGRES_PASSWORD: cohesive
+          POSTGRES_DB: cohesive
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cohesive -d cohesive"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://cohesive:cohesive@localhost:5432/cohesive?schema=public
+      DIRECT_URL: postgresql://cohesive:cohesive@localhost:5432/cohesive?schema=public
+      AUTH_SECRET: ci-secret-ci-secret-ci-secret-123456
+      NEXTAUTH_URL: http://localhost:3000
+      AUTH_TRUST_HOST: "true"
+      ALLOW_DEV_PREMIUM_BYPASS: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -16,15 +37,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx prisma generate
-      - name: Prepare test database
-        run: |
-          echo 'DATABASE_URL="file:./prisma/ci.db"' >> $GITHUB_ENV
-          echo 'DATABASE_URL="file:./prisma/ci.db"' > .env
-          echo 'AUTH_SECRET="ci-secret-ci-secret-ci-secret-123456"' >> .env
-          echo 'NEXTAUTH_URL="http://localhost:3000"' >> .env
-          echo 'AUTH_TRUST_HOST=true' >> .env
-          echo 'ALLOW_DEV_PREMIUM_BYPASS=true' >> .env
-          npx prisma migrate deploy
+      - run: npx prisma migrate deploy
       - run: npm run test
       - run: npm run lint
       - run: npm run build

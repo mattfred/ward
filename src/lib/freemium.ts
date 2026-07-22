@@ -22,5 +22,5 @@ export function limitRoadmap(items: RoadmapItem[], plan: string) {
 }
 
 export function premiumLockedMessage(feature: string) {
-  return `${feature} is part of Cohesive Premium — unlock your full multi-event wardrobe architecture.`;
+  return `${feature} is part of Ward Premium — unlock your full multi-event wardrobe architecture.`;
 }

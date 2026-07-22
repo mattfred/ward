@@ -14,7 +14,7 @@ fi
 cp prisma/schema.postgresql.prisma prisma/schema.prisma
 
 if [[ -z "${DATABASE_URL:-}" ]]; then
-  export DATABASE_URL="postgresql://cohesive:cohesive@localhost:5432/cohesive?schema=public"
+  export DATABASE_URL="postgresql://ward:ward@localhost:5432/ward?schema=public"
   echo "Using default DATABASE_URL=$DATABASE_URL"
 fi
 

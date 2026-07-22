@@ -43,7 +43,7 @@ export default function SignupPage() {
   return (
     <main className="shell" style={{ padding: "3rem 0", maxWidth: 480 }}>
       <Link href="/" className="display" style={{ fontSize: "2rem" }}>
-        Cohesive
+        Ward
       </Link>
       <h1 style={{ marginTop: "1.5rem", fontSize: "1.5rem" }}>Create your account</h1>
       <p style={{ color: "var(--ink-soft)" }}>Free to start — Premium unlocks your full rebuild.</p>

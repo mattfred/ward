@@ -12,7 +12,7 @@ export default function Error({
   return (
     <main className="shell" style={{ padding: "4rem 0", textAlign: "center" }}>
       <p className="display" style={{ fontSize: "3rem", margin: 0 }}>
-        Cohesive
+        Ward
       </p>
       <h1 style={{ marginTop: "1rem" }}>Something went wrong</h1>
       <p style={{ color: "var(--ink-soft)" }}>{error.message || "Unexpected error"}</p>

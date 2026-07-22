@@ -57,7 +57,7 @@ export function AccountForm({
   }
 
   async function onDelete() {
-    if (!confirm("Delete your Cohesive account and all wardrobe data? This cannot be undone.")) {
+    if (!confirm("Delete your Ward account and all wardrobe data? This cannot be undone.")) {
       return;
     }
     const res = await fetch("/api/account", { method: "DELETE" });

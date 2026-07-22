@@ -14,7 +14,7 @@ export default async function MetricsPage() {
   return (
     <main className="shell" style={{ padding: "2rem 0 4rem" }}>
       <Link href="/dashboard" className="display" style={{ fontSize: "1.8rem" }}>
-        Cohesive
+        Ward
       </Link>
       <h1 style={{ marginTop: "1rem" }}>Soft-launch metrics</h1>
       <p style={{ color: "var(--ink-soft)", maxWidth: "56ch" }}>

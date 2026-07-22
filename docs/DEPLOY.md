@@ -1,4 +1,4 @@
-# Deploy Cohesive (V1)
+# Deploy Ward (V1)
 
 ## Recommended stack
 
@@ -15,7 +15,7 @@ Local option:
 
 ```bash
 docker compose up -d
-export DATABASE_URL="postgresql://cohesive:cohesive@localhost:5432/cohesive?schema=public"
+export DATABASE_URL="postgresql://ward:ward@localhost:5432/ward?schema=public"
 bash scripts/use-postgres.sh
 ```
 
@@ -34,7 +34,7 @@ cp prisma/schema.postgresql.prisma prisma/schema.prisma
 |----------|----------|-------|
 | `DATABASE_URL` | Yes | Postgres connection string |
 | `AUTH_SECRET` | Yes | `openssl rand -base64 32` |
-| `NEXTAUTH_URL` | Yes | Public site URL, e.g. `https://cohesive.vercel.app` |
+| `NEXTAUTH_URL` | Yes | Public site URL, e.g. `https://ward.vercel.app` |
 | `AUTH_TRUST_HOST` | Yes | `true` |
 | `ADMIN_EMAILS` | Yes | Your email(s), comma-separated |
 | `STRIPE_SECRET_KEY` | Yes (for paid) | Live or test |
@@ -78,5 +78,5 @@ Against any environment with a valid `DATABASE_URL`:
 
 ```bash
 npx tsx scripts/seed-demo.ts
-# default: demo@cohesive.local / password123
+# default: demo@ward.local / password123
 ```

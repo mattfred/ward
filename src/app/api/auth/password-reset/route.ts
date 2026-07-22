@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       const resetUrl = `${appOrigin()}/reset-password?token=${raw}&email=${encodeURIComponent(email)}`;
       await sendEmail({
         to: email,
-        subject: "Reset your Cohesive password",
+        subject: "Reset your Ward password",
         text: `Reset your password: ${resetUrl}\nThis link expires in 1 hour.`,
       });
 

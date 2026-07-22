@@ -100,7 +100,7 @@ export default function OnboardingPage() {
   return (
     <main className="shell" style={{ padding: "2rem 0 4rem", maxWidth: 760 }}>
       <p className="display" style={{ fontSize: "2rem", marginBottom: "0.25rem" }}>
-        Cohesive
+        Ward
       </p>
       <p style={{ color: "var(--ink-soft)", marginTop: 0 }}>
         Step {step + 1} of 3 — identity before inventory.

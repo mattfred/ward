@@ -14,7 +14,7 @@ export default async function AccountPage() {
   return (
     <main className="shell" style={{ padding: "2rem 0 4rem", maxWidth: 640 }}>
       <Link href="/dashboard" className="display" style={{ fontSize: "1.8rem" }}>
-        Cohesive
+        Ward
       </Link>
       <h1 style={{ marginTop: "1rem" }}>Account</h1>
       <AccountForm name={user.name || ""} email={user.email} plan={user.plan} />

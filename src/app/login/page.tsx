@@ -54,7 +54,7 @@ export default function LoginPage() {
   return (
     <main className="shell" style={{ padding: "3rem 0", maxWidth: 480 }}>
       <Link href="/" className="display" style={{ fontSize: "2rem" }}>
-        Cohesive
+        Ward
       </Link>
       <h1 style={{ marginTop: "1.5rem", fontSize: "1.5rem" }}>Welcome back</h1>
       <Suspense fallback={<p>Loading…</p>}>

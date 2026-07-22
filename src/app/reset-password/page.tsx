@@ -51,7 +51,7 @@ export default function ResetPasswordPage() {
   return (
     <main className="shell" style={{ padding: "3rem 0", maxWidth: 480 }}>
       <Link href="/" className="display" style={{ fontSize: "2rem" }}>
-        Cohesive
+        Ward
       </Link>
       <h1 style={{ marginTop: "1.5rem" }}>Reset password</h1>
       <Suspense fallback={<p>Loading…</p>}>

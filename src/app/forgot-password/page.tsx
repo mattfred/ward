@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
   return (
     <main className="shell" style={{ padding: "3rem 0", maxWidth: 480 }}>
       <Link href="/" className="display" style={{ fontSize: "2rem" }}>
-        Cohesive
+        Ward
       </Link>
       <h1 style={{ marginTop: "1.5rem" }}>Forgot password</h1>
       <form onSubmit={onSubmit} className="card-surface" style={{ padding: "1.25rem", display: "grid", gap: "0.85rem" }}>

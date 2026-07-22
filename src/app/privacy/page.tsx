@@ -10,13 +10,13 @@ export default function PrivacyPage() {
         <h1 className="display" style={{ fontSize: "2.6rem" }}>Privacy Policy</h1>
         <p style={{ color: "var(--ink-soft)" }}>Last updated: July 21, 2026</p>
         <p>
-          Cohesive (“we”) helps you build a cohesive wardrobe. We collect account information (name, email,
+          Ward (“we”) helps you build a cohesive wardrobe. We collect account information (name, email,
           password hash), style profile answers, generated wardrobe plans, usage analytics events, and optional
           feedback. If you subscribe, Stripe processes payment details — we store customer/subscription IDs, not
           full card numbers.
         </p>
         <p>
-          We use this data to operate the product, personalize style guidance, prevent abuse, and improve Cohesive.
+          We use this data to operate the product, personalize style guidance, prevent abuse, and improve Ward.
           We do not sell personal data. Wardrobe and style data is treated as personal.
         </p>
         <p>

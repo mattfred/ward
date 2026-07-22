@@ -72,7 +72,7 @@ export default async function DashboardPage({
       <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
         <div>
           <Link href="/" className="display" style={{ fontSize: "1.8rem" }}>
-            Cohesive
+            Ward
           </Link>
           <p style={{ margin: "0.25rem 0 0", color: "var(--ink-soft)" }}>
             {user.name ? `Hi ${user.name}` : "Your wardrobe architecture"} ·{" "}
