@@ -89,6 +89,7 @@ model StyleProfile {
   formalityRange  String?
   closetHonesty   String?
   intakeMode      String   @default("guided")
+  preferenceMemory String  @default("{}")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

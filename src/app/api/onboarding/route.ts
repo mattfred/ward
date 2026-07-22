@@ -10,6 +10,7 @@ import {
 } from "@/lib/ai";
 import type { LifeEvent, StyleProfileInput } from "@/lib/types";
 import { profileReadyForGenerate } from "@/lib/intake";
+import { memoryFromRow } from "@/lib/profile";
 
 const profileSchema = z.object({
   aestheticRefs: z.array(z.string()),
@@ -109,8 +110,11 @@ export async function POST(req: Request) {
 
   await track("onboarding_started", { userId: user.id });
 
-  const system = await generateStyleSystem(profile, events);
-  const pieces = await generateBlueprint(system, events, profile);
+  const existingProfile = await prisma.styleProfile.findUnique({ where: { userId: user.id } });
+  const memory = memoryFromRow(existingProfile || {});
+
+  const system = await generateStyleSystem(profile, events, memory);
+  const pieces = await generateBlueprint(system, events, profile, memory);
   const roadmap = await generateRoadmap(pieces);
   const row = toProfileRow(profile);
 

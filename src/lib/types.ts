@@ -58,6 +58,26 @@ export type BlueprintPiece = {
   quantity: number;
   priority: number;
   ownership: OwnershipStatus;
+  /** What to look for visually (silhouette, fabric, color cues). */
+  visualBrief?: string;
+  /** Query for image / shopping search. */
+  searchQuery?: string;
+};
+
+/** Lasting corrections the AI should honor on regenerate. */
+export type PreferenceMemoryNote = {
+  at: string;
+  text: string;
+  pieceName?: string;
+  category?: string;
+};
+
+export type PreferenceMemory = {
+  hardRules: string[];
+  rejectedCategories: string[];
+  rejectedNames: string[];
+  notes: PreferenceMemoryNote[];
+  edits: { at: string; from: string; to: string; reason?: string }[];
 };
 
 export type RoadmapItem = {

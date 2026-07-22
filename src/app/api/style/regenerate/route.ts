@@ -5,7 +5,8 @@ import { generateBlueprint, generateRoadmap, generateStyleSystem } from "@/lib/a
 import { computeWeeklyFocus } from "@/lib/gaps";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 import { track } from "@/lib/analytics";
-import type { BlueprintPiece, LifeEvent, StyleProfileInput, StyleSystemData } from "@/lib/types";
+import { memoryFromRow, profileFromRow } from "@/lib/profile";
+import type { BlueprintPiece, LifeEvent } from "@/lib/types";
 import { z } from "zod";
 
 const schema = z.object({
@@ -30,26 +31,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Complete onboarding first" }, { status: 400 });
   }
 
-  const profile: StyleProfileInput = {
-    aestheticRefs: parseJson(profileRow.aestheticRefs, []),
-    preferredColors: parseJson(profileRow.preferredColors, []),
-    avoidColors: parseJson(profileRow.avoidColors, []),
-    fitPreferences: parseJson(profileRow.fitPreferences, {
-      tops: "",
-      bottoms: "",
-      overall: "",
-    }),
-    climate: profileRow.climate || "",
-    budgetTier: (profileRow.budgetTier as "low" | "mid" | "high") || "mid",
-    trustedBrands: parseJson(profileRow.trustedBrands, []),
-    values: parseJson(profileRow.values, []),
-    notes: profileRow.notes || undefined,
-  };
+  const profile = profileFromRow(profileRow);
+  const memory = memoryFromRow(profileRow);
   const events = parseJson<LifeEvent[]>(lifeMap.events, []);
 
-  let system: StyleSystemData | null = null;
+  let system = null;
   if (target === "system" || target === "all") {
-    system = await generateStyleSystem(profile, events);
+    system = await generateStyleSystem(profile, events, memory);
     await prisma.styleSystem.upsert({
       where: { userId: user.id },
       create: {
@@ -95,8 +83,7 @@ export async function POST(req: Request) {
   let pieces: BlueprintPiece[] = [];
   if (target === "blueprint" || target === "roadmap" || target === "all") {
     if (target === "blueprint" || target === "all") {
-      pieces = await generateBlueprint(system, events, profile);
-      // Preserve ownership where ids match
+      pieces = await generateBlueprint(system, events, profile, memory);
       const existing = await prisma.wardrobeBlueprint.findUnique({ where: { userId: user.id } });
       const prev = parseJson<BlueprintPiece[]>(existing?.pieces, []);
       const ownershipById = new Map(prev.map((p) => [p.id, p.ownership]));

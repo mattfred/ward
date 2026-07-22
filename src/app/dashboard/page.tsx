@@ -6,6 +6,7 @@ import { parseJson } from "@/lib/session";
 import { limitBlueprint, limitRoadmap, isPremium } from "@/lib/freemium";
 import { FREE_ROADMAP_LIMIT } from "@/lib/types";
 import type { BlueprintPiece, LifeEvent, RoadmapItem, StyleSystemData } from "@/lib/types";
+import { memoryFromRow } from "@/lib/profile";
 import { PurchaseCheck } from "@/components/PurchaseCheck";
 import { FeedbackForm } from "@/components/FeedbackForm";
 import { RegenerateControls } from "@/components/RegenerateControls";
@@ -63,6 +64,7 @@ export default async function DashboardPage({
   const eventsBlurb = premium
     ? `Full architecture across ${events.length} life contexts.`
     : `Showing your primary lifestyle only. ${Math.max(events.length - 1, 0)} more event(s) locked.`;
+  const preferenceMemory = memoryFromRow(user.styleProfile || {});
 
   return (
     <main className="shell" style={{ padding: "1.5rem 0 4rem" }}>
@@ -180,6 +182,7 @@ export default async function DashboardPage({
         lockedRoadmap={lockedRoadmap}
         premium={premium}
         initialWeeklyFocus={user.roadmap.weeklyFocus}
+        preferenceMemory={preferenceMemory}
       />
 
       <section className="card-surface" style={{ padding: "1.4rem", marginTop: "1rem" }}>

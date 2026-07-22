@@ -2,11 +2,13 @@ import OpenAI from "openai";
 import type {
   BlueprintPiece,
   LifeEvent,
+  PreferenceMemory,
   PurchaseFitResult,
   RoadmapItem,
   StyleProfileInput,
   StyleSystemData,
 } from "./types";
+import { emptyPreferenceMemory, filterPiecesByMemory, memoryPromptBlock } from "./memory";
 
 const COLOR_HEX: Record<string, string> = {
   navy: "#1B2A4A",
@@ -103,6 +105,7 @@ export function buildFallbackStyleSystem(
 export function buildFallbackBlueprint(
   system: StyleSystemData,
   events: LifeEvent[],
+  memory: PreferenceMemory = emptyPreferenceMemory(),
 ): BlueprintPiece[] {
   const categories = [
     { category: "Tops", names: ["Primary knit", "Crisp shirt", "Layering tee"] },
@@ -114,27 +117,31 @@ export function buildFallbackBlueprint(
 
   const pieces: BlueprintPiece[] = [];
   let priority = 1;
+  const paletteCue = system.palette.map((p) => p.name).join(" ");
 
   for (const event of [...events].sort((a, b) => a.priority - b.priority)) {
     for (const cat of categories) {
       for (const name of cat.names) {
         const color = system.palette[priority % system.palette.length]?.name ?? "neutral";
+        const fullName = `${event.name} ${name}`;
         pieces.push({
           id: `${slug(event.id)}-${slug(cat.category)}-${slug(name)}`,
           eventId: event.id,
           eventName: event.name,
           category: cat.category,
-          name: `${event.name} ${name}`,
+          name: fullName,
           rationale: `Supports ${event.name} (${event.dressCode}) inside your ${color} palette and ${system.silhouettes[0]} silhouette.`,
           quantity: 1,
           priority: priority++,
           ownership: "not_owned",
+          visualBrief: `${cat.category}: ${fullName} in ${color}; ${system.silhouettes[0]}; clean lines, no trend noise.`,
+          searchQuery: `${fullName} ${color} ${paletteCue} ${cat.category} clothing`,
         });
       }
     }
   }
 
-  return pieces;
+  return filterPiecesByMemory(pieces, memory);
 }
 
 export function buildFallbackRoadmap(pieces: BlueprintPiece[]): {
@@ -227,6 +234,7 @@ async function openaiClient() {
 export async function generateStyleSystem(
   profile: StyleProfileInput,
   events: LifeEvent[],
+  memory: PreferenceMemory = emptyPreferenceMemory(),
 ): Promise<StyleSystemData> {
   const fallback = buildFallbackStyleSystem(profile, events);
   const client = await openaiClient();
@@ -240,13 +248,14 @@ export async function generateStyleSystem(
         {
           role: "system",
           content:
-            "You are a wardrobe architect. Return JSON with keys: manifesto, palette (array of {name,hex} where hex is #RRGGBB), silhouettes, fabrics, alwaysRules, neverRules, signaturePieces, vibeReferences. Use genderPresentation only if provided (optional). Respect bodyNotes, antiRefs, constraints, formalityRange, and closetHonesty. Keep advice cohesion-first, not trend-chasing.",
+            "You are a wardrobe architect. Return JSON with keys: manifesto, palette (array of {name,hex} where hex is #RRGGBB), silhouettes, fabrics, alwaysRules, neverRules, signaturePieces, vibeReferences. Use genderPresentation only if provided (optional). Respect bodyNotes, antiRefs, constraints, formalityRange, closetHonesty, and preferenceMemory hardRules. Keep advice cohesion-first, not trend-chasing.",
         },
         {
           role: "user",
           content: JSON.stringify({
             profile,
             events,
+            preferenceMemory: memoryPromptBlock(memory),
             emphasis: {
               presentation: profile.genderPresentation || null,
               inspiration: profile.inspirationRefs || [],
@@ -296,8 +305,9 @@ export async function generateBlueprint(
   system: StyleSystemData,
   events: LifeEvent[],
   profile: StyleProfileInput,
+  memory: PreferenceMemory = emptyPreferenceMemory(),
 ): Promise<BlueprintPiece[]> {
-  const fallback = buildFallbackBlueprint(system, events);
+  const fallback = buildFallbackBlueprint(system, events, memory);
   const client = await openaiClient();
   if (!client) return fallback;
 
@@ -309,11 +319,16 @@ export async function generateBlueprint(
         {
           role: "system",
           content:
-            'Return JSON { "pieces": BlueprintPiece[] } where each piece has id, eventId, eventName, category, name, rationale, quantity, priority, ownership:"not_owned". Architect a cohesive wardrobe by event — not random shopping.',
+            'Return JSON { "pieces": BlueprintPiece[] } where each piece has id, eventId, eventName, category, name, rationale, quantity, priority, ownership:"not_owned", visualBrief (1-2 sentences describing silhouette/fabric/color to look for), searchQuery (short shopping/image search string). Architect a cohesive wardrobe by event — not random shopping. Strictly honor preferenceMemory: never reintroduce rejected categories/names or contradict hardRules.',
         },
         {
           role: "user",
-          content: JSON.stringify({ system, events, profile }),
+          content: JSON.stringify({
+            system,
+            events,
+            profile,
+            preferenceMemory: memoryPromptBlock(memory),
+          }),
         },
       ],
     });
@@ -321,12 +336,21 @@ export async function generateBlueprint(
     if (!raw) return fallback;
     const parsed = JSON.parse(raw) as { pieces?: BlueprintPiece[] };
     if (!parsed.pieces?.length) return fallback;
-    return parsed.pieces.map((p, i) => ({
+    const paletteCue = system.palette.map((p) => p.name).join(" ");
+    const mapped = parsed.pieces.map((p, i) => ({
       ...p,
       ownership: p.ownership || "not_owned",
       priority: p.priority || i + 1,
       quantity: p.quantity || 1,
+      visualBrief:
+        p.visualBrief?.trim() ||
+        `${p.category}: ${p.name}; ${system.silhouettes[0] || "clean lines"}; stay in ${paletteCue}.`,
+      searchQuery:
+        p.searchQuery?.trim() ||
+        `${p.name} ${p.category} ${paletteCue} clothing`,
     }));
+    const filtered = filterPiecesByMemory(mapped, memory);
+    return filtered.length ? filtered : fallback;
   } catch {
     return fallback;
   }
