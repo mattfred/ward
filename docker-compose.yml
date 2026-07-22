@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ward
+      POSTGRES_PASSWORD: ward
+      POSTGRES_DB: ward
+    ports:
+      - "5432:5432"
+    volumes:
+      - ward_pg:/var/lib/postgresql/data
+
+volumes:
+  ward_pg:

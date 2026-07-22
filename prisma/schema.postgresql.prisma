@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  image         String?
+  plan          String    @default("free") // free | premium
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  styleProfile  StyleProfile?
+  lifeMap       LifeMap?
+  styleSystem   StyleSystem?
+  blueprint     WardrobeBlueprint?
+  roadmap       RebuildRoadmap?
+  events        AnalyticsEvent[]
+  feedback      Feedback[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model StyleProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  aestheticRefs   String   // JSON array
+  preferredColors String   // JSON array
+  avoidColors     String   // JSON array
+  fitPreferences  String   // JSON
+  climate         String?
+  budgetTier      String?  // low | mid | high
+  trustedBrands   String   // JSON array
+  values          String   // JSON array
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LifeMap {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  events    String   // JSON: [{id, name, frequency, dressCode, priority}]
+  primaryEventId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model StyleSystem {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  manifesto       String
+  palette         String   // JSON: [{name, hex}]
+  silhouettes     String   // JSON array
+  fabrics         String   // JSON array
+  alwaysRules     String   // JSON array
+  neverRules      String   // JSON array
+  signaturePieces String   // JSON array
+  vibeReferences  String   // JSON array
+  rawJson         String?  // full AI payload
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WardrobeBlueprint {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  pieces      String   // JSON: BlueprintPiece[]
+  summary     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RebuildRoadmap {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  items       String   // JSON: RoadmapItem[]
+  weeklyFocus String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  name      String
+  props     String?  // JSON
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  userId    String
+  cohesive  Int      // 1-5: closet feels more cohesive
+  comment   String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
