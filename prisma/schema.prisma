@@ -79,6 +79,16 @@ model StyleProfile {
   trustedBrands   String
   values          String
   notes           String?
+  genderPresentation String?
+  ageRange        String?
+  bodyNotes       String?
+  heightBand      String?
+  constraints     String   @default("[]")
+  inspirationRefs String   @default("[]")
+  antiRefs        String   @default("[]")
+  formalityRange  String?
+  closetHonesty   String?
+  intakeMode      String   @default("guided")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

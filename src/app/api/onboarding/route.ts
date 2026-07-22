@@ -9,23 +9,36 @@ import {
   generateStyleSystem,
 } from "@/lib/ai";
 import type { LifeEvent, StyleProfileInput } from "@/lib/types";
+import { profileReadyForGenerate } from "@/lib/intake";
+
+const profileSchema = z.object({
+  aestheticRefs: z.array(z.string()),
+  preferredColors: z.array(z.string()).min(1),
+  avoidColors: z.array(z.string()),
+  fitPreferences: z.object({
+    tops: z.string(),
+    bottoms: z.string(),
+    overall: z.string(),
+  }),
+  climate: z.string(),
+  budgetTier: z.enum(["low", "mid", "high"]),
+  trustedBrands: z.array(z.string()),
+  values: z.array(z.string()),
+  notes: z.string().optional(),
+  genderPresentation: z.string().optional(),
+  ageRange: z.string().optional(),
+  bodyNotes: z.string().optional(),
+  heightBand: z.string().optional(),
+  constraints: z.array(z.string()).optional(),
+  inspirationRefs: z.array(z.string()).optional(),
+  antiRefs: z.array(z.string()).optional(),
+  formalityRange: z.string().optional(),
+  closetHonesty: z.string().optional(),
+  intakeMode: z.enum(["guided", "studio"]).optional(),
+});
 
 const schema = z.object({
-  profile: z.object({
-    aestheticRefs: z.array(z.string()).min(1),
-    preferredColors: z.array(z.string()).min(1),
-    avoidColors: z.array(z.string()),
-    fitPreferences: z.object({
-      tops: z.string(),
-      bottoms: z.string(),
-      overall: z.string(),
-    }),
-    climate: z.string(),
-    budgetTier: z.enum(["low", "mid", "high"]),
-    trustedBrands: z.array(z.string()),
-    values: z.array(z.string()),
-    notes: z.string().optional(),
-  }),
+  profile: profileSchema,
   events: z
     .array(
       z.object({
@@ -40,6 +53,30 @@ const schema = z.object({
   primaryEventId: z.string(),
 });
 
+function toProfileRow(profile: StyleProfileInput) {
+  return {
+    aestheticRefs: JSON.stringify(profile.aestheticRefs),
+    preferredColors: JSON.stringify(profile.preferredColors),
+    avoidColors: JSON.stringify(profile.avoidColors),
+    fitPreferences: JSON.stringify(profile.fitPreferences),
+    climate: profile.climate || null,
+    budgetTier: profile.budgetTier,
+    trustedBrands: JSON.stringify(profile.trustedBrands),
+    values: JSON.stringify(profile.values),
+    notes: profile.notes ?? null,
+    genderPresentation: profile.genderPresentation?.trim() || null,
+    ageRange: profile.ageRange?.trim() || null,
+    bodyNotes: profile.bodyNotes?.trim() || null,
+    heightBand: profile.heightBand?.trim() || null,
+    constraints: JSON.stringify(profile.constraints ?? []),
+    inspirationRefs: JSON.stringify(profile.inspirationRefs ?? []),
+    antiRefs: JSON.stringify(profile.antiRefs ?? []),
+    formalityRange: profile.formalityRange?.trim() || null,
+    closetHonesty: profile.closetHonesty?.trim() || null,
+    intakeMode: profile.intakeMode || "guided",
+  };
+}
+
 export async function POST(req: Request) {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -52,37 +89,35 @@ export async function POST(req: Request) {
   const profile = parsed.data.profile as StyleProfileInput;
   const events = parsed.data.events as LifeEvent[];
 
+  if (!profileReadyForGenerate(profile)) {
+    return NextResponse.json(
+      {
+        error:
+          "Add at least one style direction or inspiration, a color preference, and a fit/body note.",
+      },
+      { status: 400 },
+    );
+  }
+
+  // If aesthetics empty, seed from inspiration for downstream prompts
+  if (!profile.aestheticRefs.length && profile.inspirationRefs?.length) {
+    profile.aestheticRefs = profile.inspirationRefs.slice(0, 4);
+  }
+  if (!profile.fitPreferences.overall.trim() && profile.bodyNotes?.trim()) {
+    profile.fitPreferences.overall = profile.bodyNotes.trim().slice(0, 120);
+  }
+
   await track("onboarding_started", { userId: user.id });
 
   const system = await generateStyleSystem(profile, events);
   const pieces = await generateBlueprint(system, events, profile);
   const roadmap = await generateRoadmap(pieces);
+  const row = toProfileRow(profile);
 
   await prisma.styleProfile.upsert({
     where: { userId: user.id },
-    create: {
-      userId: user.id,
-      aestheticRefs: JSON.stringify(profile.aestheticRefs),
-      preferredColors: JSON.stringify(profile.preferredColors),
-      avoidColors: JSON.stringify(profile.avoidColors),
-      fitPreferences: JSON.stringify(profile.fitPreferences),
-      climate: profile.climate,
-      budgetTier: profile.budgetTier,
-      trustedBrands: JSON.stringify(profile.trustedBrands),
-      values: JSON.stringify(profile.values),
-      notes: profile.notes ?? null,
-    },
-    update: {
-      aestheticRefs: JSON.stringify(profile.aestheticRefs),
-      preferredColors: JSON.stringify(profile.preferredColors),
-      avoidColors: JSON.stringify(profile.avoidColors),
-      fitPreferences: JSON.stringify(profile.fitPreferences),
-      climate: profile.climate,
-      budgetTier: profile.budgetTier,
-      trustedBrands: JSON.stringify(profile.trustedBrands),
-      values: JSON.stringify(profile.values),
-      notes: profile.notes ?? null,
-    },
+    create: { userId: user.id, ...row },
+    update: row,
   });
 
   await prisma.lifeMap.upsert({

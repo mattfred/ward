@@ -20,6 +20,17 @@ export type StyleProfileInput = {
   trustedBrands: string[];
   values: string[];
   notes?: string;
+  /** Optional dressing presentation — never required. */
+  genderPresentation?: string;
+  ageRange?: string;
+  bodyNotes?: string;
+  heightBand?: string;
+  constraints?: string[];
+  inspirationRefs?: string[];
+  antiRefs?: string[];
+  formalityRange?: string;
+  closetHonesty?: string;
+  intakeMode?: "guided" | "studio";
 };
 
 export type PaletteSwatch = { name: string; hex: string };

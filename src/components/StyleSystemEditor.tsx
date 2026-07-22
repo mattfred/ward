@@ -15,11 +15,24 @@ function paletteToText(palette: PaletteSwatch[]) {
   return palette.map((s) => `${s.name}|${s.hex}`).join("\n");
 }
 
+function normalizeHex(raw: string): string | null {
+  let value = raw.trim();
+  if (!value) return null;
+  if (!value.startsWith("#")) value = `#${value}`;
+  if (/^#[0-9a-fA-F]{8}$/.test(value)) value = value.slice(0, 7);
+  if (/^#[0-9a-fA-F]{3}$/.test(value) || /^#[0-9a-fA-F]{6}$/.test(value)) {
+    return value.toLowerCase();
+  }
+  return null;
+}
+
 function textToPalette(value: string): PaletteSwatch[] {
   return linesToList(value)
     .map((line) => {
-      const [name, hex] = line.split("|").map((s) => s.trim());
-      if (!name || !hex) return null;
+      const [name, hexRaw] = line.split("|").map((s) => s.trim());
+      if (!name || !hexRaw) return null;
+      const hex = normalizeHex(hexRaw);
+      if (!hex) return null;
       return { name, hex };
     })
     .filter((s): s is PaletteSwatch => Boolean(s));

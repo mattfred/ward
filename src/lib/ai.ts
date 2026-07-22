@@ -45,14 +45,21 @@ export function buildFallbackStyleSystem(
   events: LifeEvent[],
 ): StyleSystemData {
   const primary = events.sort((a, b) => a.priority - b.priority)[0];
-  const refs = profile.aestheticRefs.slice(0, 4).join(", ") || "clean modern classics";
+  const refs =
+    profile.aestheticRefs.slice(0, 4).join(", ") ||
+    profile.inspirationRefs?.slice(0, 3).join(", ") ||
+    "clean modern classics";
   const values = profile.values.slice(0, 3).join(", ") || "intentional dressing";
+  const presentation = profile.genderPresentation?.trim();
+  const formality = profile.formalityRange || "smart casual";
 
   return {
-    manifesto: `You dress with intention around ${refs}. Your wardrobe should feel cohesive across ${primary?.name ?? "everyday life"} and beyond — fewer louder pieces, more repeating silhouettes and a restrained palette so every outfit reads as you. You value ${values}.`,
+    manifesto: `You dress with intention around ${refs}${
+      presentation ? ` (${presentation.toLowerCase()} wardrobe)` : ""
+    }. Your wardrobe should feel cohesive across ${primary?.name ?? "everyday life"} and beyond — fewer louder pieces, more repeating silhouettes and a restrained palette so every outfit reads as you. Formality baseline: ${formality}. You value ${values}.`,
     palette: pickPalette(profile.preferredColors),
     silhouettes: [
-      profile.fitPreferences.overall || "clean tailored lines",
+      profile.fitPreferences.overall || profile.bodyNotes || "clean tailored lines",
       profile.fitPreferences.tops || "structured but comfortable tops",
       profile.fitPreferences.bottoms || "straight or gently tapered bottoms",
     ],
@@ -67,14 +74,19 @@ export function buildFallbackStyleSystem(
       ...(profile.values.includes("quality")
         ? ["Buy fewer, better pieces with clear cost-per-wear"]
         : []),
-    ].slice(0, 5),
+      ...(profile.constraints?.includes("Need machine-washable only")
+        ? ["Prefer machine-washable fabrics for weekly rotation"]
+        : []),
+    ].slice(0, 6),
     neverRules: [
       ...(profile.avoidColors.length
         ? [`Avoid dominant ${profile.avoidColors.join(", ")} unless tiny accents`]
         : ["Avoid trend-only pieces that ignore your silhouette rules"]),
-      "No one-off statement items that only work once",
+      ...(profile.antiRefs?.length
+        ? profile.antiRefs.slice(0, 2).map((a) => `Avoid ${a}`)
+        : ["No one-off statement items that only work once"]),
       "Don't expand the wardrobe before finishing core gaps",
-    ],
+    ].slice(0, 5),
     signaturePieces: [
       `A ${profile.preferredColors[0] || "navy"} layer that anchors most looks`,
       "A reliable bottom that pairs with every top in the system",
@@ -82,7 +94,9 @@ export function buildFallbackStyleSystem(
     ],
     vibeReferences: profile.aestheticRefs.length
       ? profile.aestheticRefs
-      : ["quiet luxury", "modern classic", "intentional casual"],
+      : profile.inspirationRefs?.length
+        ? profile.inspirationRefs
+        : ["quiet luxury", "modern classic", "intentional casual"],
   };
 }
 
@@ -226,20 +240,42 @@ export async function generateStyleSystem(
         {
           role: "system",
           content:
-            "You are a wardrobe architect. Return JSON with keys: manifesto, palette (array of {name,hex}), silhouettes, fabrics, alwaysRules, neverRules, signaturePieces, vibeReferences. Keep advice cohesion-first, not trend-chasing.",
+            "You are a wardrobe architect. Return JSON with keys: manifesto, palette (array of {name,hex} where hex is #RRGGBB), silhouettes, fabrics, alwaysRules, neverRules, signaturePieces, vibeReferences. Use genderPresentation only if provided (optional). Respect bodyNotes, antiRefs, constraints, formalityRange, and closetHonesty. Keep advice cohesion-first, not trend-chasing.",
         },
         {
           role: "user",
-          content: JSON.stringify({ profile, events }),
+          content: JSON.stringify({
+            profile,
+            events,
+            emphasis: {
+              presentation: profile.genderPresentation || null,
+              inspiration: profile.inspirationRefs || [],
+              avoids: [...(profile.antiRefs || []), ...profile.avoidColors],
+              constraints: profile.constraints || [],
+              formality: profile.formalityRange || null,
+              closet: profile.closetHonesty || null,
+            },
+          }),
         },
       ],
     });
     const raw = completion.choices[0]?.message?.content;
     if (!raw) return fallback;
     const parsed = JSON.parse(raw) as StyleSystemData;
+    const normalizedPalette = (parsed.palette || [])
+      .map((swatch) => {
+        const hexRaw = String(swatch?.hex || "").trim();
+        let hex = hexRaw.startsWith("#") ? hexRaw : hexRaw ? `#${hexRaw}` : "";
+        if (/^#[0-9a-fA-F]{8}$/.test(hex)) hex = hex.slice(0, 7);
+        if (!/^#[0-9a-fA-F]{3}$|^#[0-9a-fA-F]{6}$/.test(hex)) return null;
+        const name = String(swatch?.name || "").trim();
+        if (!name) return null;
+        return { name, hex: hex.toLowerCase() };
+      })
+      .filter((s): s is { name: string; hex: string } => Boolean(s));
     return {
       manifesto: parsed.manifesto || fallback.manifesto,
-      palette: parsed.palette?.length ? parsed.palette : fallback.palette,
+      palette: normalizedPalette.length ? normalizedPalette : fallback.palette,
       silhouettes: parsed.silhouettes?.length ? parsed.silhouettes : fallback.silhouettes,
       fabrics: parsed.fabrics?.length ? parsed.fabrics : fallback.fabrics,
       alwaysRules: parsed.alwaysRules?.length ? parsed.alwaysRules : fallback.alwaysRules,
