@@ -181,3 +181,68 @@ textarea {
 .drift {
   animation: drift 7s ease-in-out infinite;
 }
+
+.regen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(20, 32, 28, 0.42);
+  backdrop-filter: blur(4px);
+}
+
+.regen-modal {
+  width: min(420px, 100%);
+  padding: 1.35rem 1.4rem;
+  animation: fadeUp 220ms ease;
+}
+
+.regen-spinner {
+  width: 28px;
+  height: 28px;
+  margin-top: 1rem;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  border-top-color: var(--moss);
+  animation: regen-spin 0.8s linear infinite;
+}
+
+@keyframes regen-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.regen-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  z-index: 90;
+  transform: translateX(-50%);
+  max-width: min(480px, calc(100% - 2rem));
+  padding: 0.85rem 1.15rem;
+  border-radius: 999px;
+  background: var(--moss-deep);
+  color: #f7fbf8;
+  box-shadow: var(--shadow);
+  font-size: 0.95rem;
+  animation: fadeUp 220ms ease;
+}
+
+.regen-flash {
+  animation: regen-highlight 1.4s ease;
+}
+
+@keyframes regen-highlight {
+  0% {
+    box-shadow: 0 0 0 0 rgba(47, 93, 74, 0.45);
+  }
+  40% {
+    box-shadow: 0 0 0 6px rgba(47, 93, 74, 0.22);
+  }
+  100% {
+    box-shadow: var(--shadow);
+  }
+}

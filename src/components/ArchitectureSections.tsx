@@ -54,7 +54,7 @@ export function ArchitectureSections({
 
       <MemoryPanel memory={memory} />
 
-      <section className="card-surface" style={{ padding: "1.4rem", marginTop: "1rem" }}>
+      <section id="wardrobe-blueprint" className="card-surface" style={{ padding: "1.4rem", marginTop: "1rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
           <h2 className="display" style={{ margin: 0, fontSize: "2rem" }}>
             Wardrobe blueprint
@@ -70,7 +70,7 @@ export function ArchitectureSections({
         />
       </section>
 
-      <section className="card-surface" style={{ padding: "1.4rem", marginTop: "1rem" }}>
+      <section id="rebuild-roadmap" className="card-surface" style={{ padding: "1.4rem", marginTop: "1rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
           <div>
             <h2 className="display" style={{ margin: 0, fontSize: "2rem" }}>

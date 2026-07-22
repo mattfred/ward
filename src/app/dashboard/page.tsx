@@ -7,11 +7,13 @@ import { limitBlueprint, limitRoadmap, isPremium } from "@/lib/freemium";
 import { FREE_ROADMAP_LIMIT } from "@/lib/types";
 import type { BlueprintPiece, LifeEvent, RoadmapItem, StyleSystemData } from "@/lib/types";
 import { memoryFromRow } from "@/lib/profile";
+import { computeBlueprintCoverage } from "@/lib/coverage";
 import { PurchaseCheck } from "@/components/PurchaseCheck";
 import { FeedbackForm } from "@/components/FeedbackForm";
 import { RegenerateControls } from "@/components/RegenerateControls";
 import { StyleSystemEditor } from "@/components/StyleSystemEditor";
 import { ArchitectureSections } from "@/components/ArchitectureSections";
+import { CoveragePanel } from "@/components/CoveragePanel";
 import { PortalButton } from "@/components/PortalButton";
 import { isAdminEmail } from "@/lib/env";
 import { track } from "@/lib/analytics";
@@ -33,6 +35,10 @@ export default async function DashboardPage({
       blueprint: true,
       roadmap: true,
       styleProfile: true,
+      closetItems: {
+        where: { archived: false },
+        select: { id: true, name: true, blueprintPieceId: true, archived: true },
+      },
     },
   });
 
@@ -65,6 +71,7 @@ export default async function DashboardPage({
     ? `Full architecture across ${events.length} life contexts.`
     : `Showing your primary lifestyle only. ${Math.max(events.length - 1, 0)} more event(s) locked.`;
   const preferenceMemory = memoryFromRow(user.styleProfile || {});
+  const coverage = computeBlueprintCoverage(pieces, user.closetItems);
 
   return (
     <main className="shell" style={{ padding: "1.5rem 0 4rem" }}>
@@ -79,6 +86,15 @@ export default async function DashboardPage({
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+          <Link href="/closet" className="btn btn-ghost" style={{ padding: "0.55rem 1rem" }}>
+            Closet
+          </Link>
+          <Link href="/outfits" className="btn btn-ghost" style={{ padding: "0.55rem 1rem" }}>
+            Outfits
+          </Link>
+          <Link href="/trips" className="btn btn-ghost" style={{ padding: "0.55rem 1rem" }}>
+            Trips
+          </Link>
           <Link href="/account" className="btn btn-ghost" style={{ padding: "0.55rem 1rem" }}>
             Account
           </Link>
@@ -107,7 +123,7 @@ export default async function DashboardPage({
         </div>
       ) : null}
 
-      <section className="card-surface" style={{ padding: "1.4rem", marginTop: "1.25rem" }}>
+      <section id="style-system" className="card-surface" style={{ padding: "1.4rem", marginTop: "1.25rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
           <h2 className="display" style={{ marginTop: 0, fontSize: "2rem", marginBottom: 0 }}>
             Your style system
@@ -172,6 +188,8 @@ export default async function DashboardPage({
           <StyleSystemEditor system={system} />
         </details>
       </section>
+
+      <CoveragePanel coverage={coverage} pieces={pieces} />
 
       <ArchitectureSections
         key={pieces.map((p) => p.id).join("|")}

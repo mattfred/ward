@@ -17,3 +17,13 @@ export function shoppingLinks(piece: BlueprintPiece) {
     shop: `https://www.google.com/search?tbm=shop&q=${q}`,
   };
 }
+
+/** Shopping search tuned for a wardrobe gap (adds "buy" intent + category). */
+export function gapShoppingLinks(piece: BlueprintPiece) {
+  const base = pieceSearchQuery(piece);
+  const q = encodeURIComponent(`${base} buy ${piece.category}`);
+  return {
+    images: `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(base)}`,
+    shop: `https://www.google.com/search?tbm=shop&q=${q}`,
+  };
+}

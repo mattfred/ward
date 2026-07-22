@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
-  const protectedPaths = ["/dashboard", "/onboarding", "/metrics", "/account"];
+  const protectedPaths = ["/dashboard", "/onboarding", "/metrics", "/account", "/closet", "/outfits", "/trips"];
   const needsAuth = protectedPaths.some((p) => pathname.startsWith(p));
 
   if (needsAuth && !req.auth) {
@@ -16,5 +16,13 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/onboarding/:path*", "/metrics/:path*", "/account/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/onboarding/:path*",
+    "/metrics/:path*",
+    "/account/:path*",
+    "/closet/:path*",
+    "/outfits/:path*",
+    "/trips/:path*",
+  ],
 };

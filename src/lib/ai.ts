@@ -9,6 +9,7 @@ import type {
   StyleSystemData,
 } from "./types";
 import { emptyPreferenceMemory, filterPiecesByMemory, memoryPromptBlock } from "./memory";
+import { buildFallbackOutfitsFromCloset, type OutfitSuggestion } from "./outfits";
 
 const COLOR_HEX: Record<string, string> = {
   navy: "#1B2A4A",
@@ -431,3 +432,91 @@ export async function evaluatePurchaseFit(
     return fallback;
   }
 }
+
+export async function generateOutfitsFromCloset(
+  items: { id: string; name: string; category: string; color?: string | null }[],
+  system: StyleSystemData | null,
+  memory: PreferenceMemory = emptyPreferenceMemory(),
+): Promise<OutfitSuggestion[]> {
+  const fallback = buildFallbackOutfitsFromCloset(items);
+  const client = await openaiClient();
+  if (!client || items.length < 2) return fallback;
+
+  try {
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content:
+            'Return JSON { "outfits": [{ "name", "itemIds", "rationale", "occasion" }] }. Only use provided item ids. Honor preferenceMemory. Prefer cohesive combinations matching the style system.',
+        },
+        {
+          role: "user",
+          content: JSON.stringify({
+            items,
+            system,
+            preferenceMemory: memoryPromptBlock(memory),
+          }),
+        },
+      ],
+    });
+    const raw = completion.choices[0]?.message?.content;
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw) as {
+      outfits?: { name: string; itemIds: string[]; rationale: string; occasion?: string }[];
+    };
+    const idSet = new Set(items.map((i) => i.id));
+    const cleaned = (parsed.outfits || [])
+      .map((o) => ({
+        name: String(o.name || "Look").slice(0, 120),
+        itemIds: (o.itemIds || []).filter((id) => idSet.has(id)).slice(0, 8),
+        rationale: String(o.rationale || "").slice(0, 400),
+        occasion: o.occasion?.slice(0, 80),
+      }))
+      .filter((o) => o.itemIds.length >= 2);
+    return cleaned.length ? cleaned.slice(0, 6) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/** Generate a stylized outfit reference image; returns data URL or null. */
+export async function generateOutfitImage(opts: {
+  outfitName: string;
+  pieces: string[];
+  palette?: string[];
+  silhouettes?: string[];
+}): Promise<string | null> {
+  const client = await openaiClient();
+  if (!client) return null;
+
+  const prompt = [
+    "Fashion flat-lay / editorial outfit board, clean studio light, no text, no logos, no people faces.",
+    `Outfit: ${opts.outfitName}.`,
+    `Pieces: ${opts.pieces.join(", ")}.`,
+    opts.palette?.length ? `Palette: ${opts.palette.join(", ")}.` : "",
+    opts.silhouettes?.length ? `Silhouette: ${opts.silhouettes[0]}.` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  try {
+    const result = await client.images.generate({
+      model: "dall-e-2",
+      prompt: prompt.slice(0, 900),
+      size: "512x512",
+      n: 1,
+      response_format: "b64_json",
+    });
+    const b64 = result.data?.[0]?.b64_json;
+    if (!b64) return null;
+    const dataUrl = `data:image/png;base64,${b64}`;
+    if (dataUrl.length > 350_000) return null;
+    return dataUrl;
+  } catch {
+    return null;
+  }
+}
+
