@@ -43,6 +43,8 @@ cp prisma/schema.postgresql.prisma prisma/schema.prisma
 | `STRIPE_PRICE_YEARLY` | Yes (for paid) | Price ID |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Optional | Future client Stripe.js |
 | `OPENAI_API_KEY` | Optional | Richer generation |
+| `RESEND_API_KEY` | Recommended | Password-reset email delivery |
+| `EMAIL_FROM` | Optional | Verified Resend from address (defaults to `Ward <onboarding@resend.dev>`) |
 | `ALLOW_DEV_PREMIUM_BYPASS` | No | Must stay unset/`false` in production |
 
 ## 3. Stripe setup

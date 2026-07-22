@@ -17,6 +17,7 @@ Full deploy instructions: [DEPLOY.md](./DEPLOY.md)
 - [ ] Stripe live keys + monthly/yearly price IDs + webhook secret configured
 - [ ] Stripe Customer Portal enabled in Stripe Dashboard
 - [ ] Optional: `OPENAI_API_KEY` for richer generation
+- [ ] `RESEND_API_KEY` (+ verified `EMAIL_FROM`) for password-reset emails
 - [ ] Privacy (`/privacy`) and Terms (`/terms`) reviewed
 - [ ] Soft-launch cohesion feedback reviewed on `/metrics`
 - [ ] Optional demo user: `npm run seed`

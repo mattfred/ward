@@ -55,11 +55,17 @@ export async function POST(req: Request) {
       });
 
       const resetUrl = `${appOrigin()}/reset-password?token=${raw}&email=${encodeURIComponent(email)}`;
-      await sendEmail({
-        to: email,
-        subject: "Reset your Ward password",
-        text: `Reset your password: ${resetUrl}\nThis link expires in 1 hour.`,
-      });
+      try {
+        await sendEmail({
+          to: email,
+          subject: "Reset your Ward password",
+          text: `Reset your password: ${resetUrl}\n\nThis link expires in 1 hour.\nIf you didn't request this, you can ignore this email.`,
+          html: `<p>Reset your Ward password:</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>This link expires in 1 hour.</p><p>If you didn't request this, you can ignore this email.</p>`,
+        });
+      } catch (err) {
+        // Avoid email enumeration: still return ok even if delivery fails.
+        console.error("[password-reset] email send failed", err);
+      }
 
       if (!isProduction()) {
         response.resetUrl = resetUrl;

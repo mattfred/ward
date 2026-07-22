@@ -37,6 +37,7 @@ export default async function PricingPage() {
               <li>Style system summary</li>
               <li>1 primary lifestyle blueprint</li>
               <li>Top 5 rebuild priorities</li>
+              <li>Ownership tracking (keep / replace / gaps)</li>
             </ul>
             <Link href={session ? "/dashboard" : "/signup"} className="btn btn-ghost">
               {session ? "Go to dashboard" : "Start free"}
@@ -54,10 +55,9 @@ export default async function PricingPage() {
             <p style={{ color: "var(--ink-soft)", marginTop: 0 }}>or {PRICING.yearly.label}</p>
             <ul>
               <li>Full multi-event wardrobe architecture</li>
-              <li>Complete rebuild roadmap + budget pacing</li>
+              <li>Complete rebuild roadmap with budget tiers</li>
               <li>Purchase-fit guardrails</li>
-              <li>Ownership tracking on blueprint pieces</li>
-              <li>Seasonal refresh path (coming next)</li>
+              <li>Regenerate + edit full style system</li>
             </ul>
             {session ? (
               <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>

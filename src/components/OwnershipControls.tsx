@@ -3,8 +3,16 @@
 import { useMemo, useState } from "react";
 import type { BlueprintPiece, OwnershipStatus } from "@/lib/types";
 
-export function OwnershipControls({ pieces: initial }: { pieces: BlueprintPiece[] }) {
-  const [pieces, setPieces] = useState(initial);
+export function OwnershipControls({
+  pieces: controlledPieces,
+  onOwnershipChange,
+}: {
+  pieces: BlueprintPiece[];
+  onOwnershipChange?: (pieceId: string, ownership: OwnershipStatus) => void;
+}) {
+  const [localPieces, setLocalPieces] = useState(controlledPieces);
+  const pieces = onOwnershipChange ? controlledPieces : localPieces;
+
   const grouped = useMemo(() => {
     const map = new Map<string, BlueprintPiece[]>();
     for (const p of pieces) {
@@ -15,7 +23,13 @@ export function OwnershipControls({ pieces: initial }: { pieces: BlueprintPiece[
   }, [pieces]);
 
   async function setOwnership(pieceId: string, ownership: OwnershipStatus) {
-    setPieces((prev) => prev.map((p) => (p.id === pieceId ? { ...p, ownership } : p)));
+    if (onOwnershipChange) {
+      onOwnershipChange(pieceId, ownership);
+    } else {
+      setLocalPieces((prev) =>
+        prev.map((p) => (p.id === pieceId ? { ...p, ownership } : p)),
+      );
+    }
     await fetch("/api/blueprint/ownership", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

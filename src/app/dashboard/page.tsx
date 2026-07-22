@@ -6,16 +6,12 @@ import { parseJson } from "@/lib/session";
 import { limitBlueprint, limitRoadmap, isPremium } from "@/lib/freemium";
 import { FREE_ROADMAP_LIMIT } from "@/lib/types";
 import type { BlueprintPiece, LifeEvent, RoadmapItem, StyleSystemData } from "@/lib/types";
-import { UpgradeButton } from "@/components/UpgradeButton";
-import { OwnershipControls } from "@/components/OwnershipControls";
-import { RoadmapList } from "@/components/RoadmapList";
 import { PurchaseCheck } from "@/components/PurchaseCheck";
 import { FeedbackForm } from "@/components/FeedbackForm";
 import { RegenerateControls } from "@/components/RegenerateControls";
 import { StyleSystemEditor } from "@/components/StyleSystemEditor";
-import { GapPanel } from "@/components/GapPanel";
+import { ArchitectureSections } from "@/components/ArchitectureSections";
 import { PortalButton } from "@/components/PortalButton";
-import { analyzeOwnership, computeWeeklyFocus } from "@/lib/gaps";
 import { isAdminEmail } from "@/lib/env";
 import { track } from "@/lib/analytics";
 
@@ -63,9 +59,10 @@ export default async function DashboardPage({
   const roadmap = limitRoadmap(allRoadmap, user.plan);
   const lockedEvents = !premium && events.length > 1;
   const lockedRoadmap = !premium && allRoadmap.length > FREE_ROADMAP_LIMIT;
-  const insight = analyzeOwnership(pieces);
-  const weeklyFocus = computeWeeklyFocus(pieces, user.roadmap.weeklyFocus);
   const showMetrics = isAdminEmail(user.email);
+  const eventsBlurb = premium
+    ? `Full architecture across ${events.length} life contexts.`
+    : `Showing your primary lifestyle only. ${Math.max(events.length - 1, 0)} more event(s) locked.`;
 
   return (
     <main className="shell" style={{ padding: "1.5rem 0 4rem" }}>
@@ -174,45 +171,16 @@ export default async function DashboardPage({
         </details>
       </section>
 
-      <section className="card-surface" style={{ padding: "1.4rem", marginTop: "1rem" }}>
-        <h2 className="display" style={{ marginTop: 0, fontSize: "2rem" }}>
-          Keep · replace · gaps
-        </h2>
-        <GapPanel insight={insight} />
-      </section>
-
-      <section className="card-surface" style={{ padding: "1.4rem", marginTop: "1rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
-          <h2 className="display" style={{ margin: 0, fontSize: "2rem" }}>
-            Wardrobe blueprint
-          </h2>
-          {lockedEvents ? <UpgradeButton label="Unlock all events" /> : null}
-        </div>
-        <p style={{ color: "var(--ink-soft)" }}>
-          {premium
-            ? `Full architecture across ${events.length} life contexts.`
-            : `Showing your primary lifestyle only. ${Math.max(events.length - 1, 0)} more event(s) locked.`}
-        </p>
-        <OwnershipControls pieces={pieces} />
-      </section>
-
-      <section className="card-surface" style={{ padding: "1.4rem", marginTop: "1rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
-          <div>
-            <h2 className="display" style={{ margin: 0, fontSize: "2rem" }}>
-              Rebuild roadmap
-            </h2>
-            <p style={{ color: "var(--ink-soft)", marginBottom: 0 }}>{weeklyFocus}</p>
-          </div>
-          {lockedRoadmap ? <UpgradeButton label="Unlock full roadmap" /> : null}
-        </div>
-        <RoadmapList items={roadmap} />
-        {!premium ? (
-          <p style={{ color: "var(--ink-soft)", marginTop: "0.75rem" }}>
-            Free includes your top {FREE_ROADMAP_LIMIT} priority pieces.
-          </p>
-        ) : null}
-      </section>
+      <ArchitectureSections
+        key={pieces.map((p) => p.id).join("|")}
+        pieces={pieces}
+        roadmap={roadmap}
+        eventsBlurb={eventsBlurb}
+        lockedEvents={lockedEvents}
+        lockedRoadmap={lockedRoadmap}
+        premium={premium}
+        initialWeeklyFocus={user.roadmap.weeklyFocus}
+      />
 
       <section className="card-surface" style={{ padding: "1.4rem", marginTop: "1rem" }}>
         <h2 className="display" style={{ marginTop: 0, fontSize: "2rem" }}>
